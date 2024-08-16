@@ -82,7 +82,7 @@ class HHJobs(MainParser):
         """
         Функция производит фильтрацию по списку вакансий по зарплате. Можно указать диапазон или же одиночное число.
         В случае если будет указано одиночное число - будут отсечены результаты с зарплатой ниже указанной
-        :param salary: желаемая минимальная зарплата или диапозон зарплаты через "-"
+        :param salary: желаемая минимальная зарплата или диапазон зарплаты через "-"
         :return:
         """
 
@@ -90,9 +90,12 @@ class HHJobs(MainParser):
         salary_upper = None
         salary_range = False
 
+        # Проверяем, указан ли диапазон зарплат
         if "-" in salary:
             salary_lower, salary_upper = list(map(int, salary.split("-")))
             salary_range = True
+        else:
+            salary_lower = int(salary)  # Если указано одно число, будем фильтровать по нему
 
         self.vacancies = sorted(self.vacancies, key=lambda _: _["salary"]["from"] or _["salary"]["to"], reverse=True)
 
@@ -100,12 +103,15 @@ class HHJobs(MainParser):
 
         for vacancy in self.vacancies:
             salary_target = vacancy["salary"]["from"] or vacancy["salary"]["to"]
+
+            # Фильтруем по диапазону
             if salary_range:
                 if salary_lower <= salary_target <= salary_upper:
                     filtered_data.append(vacancy)
                     continue
 
-            if salary_target >= int(salary):
+            # Фильтруем по минимальной зарплате
+            elif salary_target >= salary_lower:
                 filtered_data.append(vacancy)
 
         self.vacancies = filtered_data
